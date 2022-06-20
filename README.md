@@ -1,5 +1,13 @@
 # DOTA-processing  
-Codes and tools for pre-processing DOTA dataset and processing precdiction results
+Codes and tools for pre-processing DOTA dataset and processing precdiction results.
+
+To use the code, especially `merge.py`, please install `swig`. For Windows system, go to the homepage of swig and download the zip pakage and unzip it.
+
+Then add the unzipped folder into system variable. And use the code blow to create the `c++` associations used in `polyiou.py`.
+```
+./swig -c++ -python
+python setup.py build_ext --inplace
+```
 
 ---
 
