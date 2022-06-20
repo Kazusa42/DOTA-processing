@@ -1,17 +1,20 @@
-"""
-re-format the detection results into the format like:
-task1_classname.txt
-----img_name confidence poly
-----img_name confidence poly
-...
-"""
 import os
 
+from merge import mergebypoly
 
-OUT_PATH = r'C:\Users\lyin0\OneDrive\桌面\format_res/'
 
+def formatRes(res_path, out_dir):
+    """
+    res_path: detection results path
+    out_dir: where to store reformated results txt file
 
-def formatRes(res_path):
+    re-format the detection results into the format like:
+    task1_classname.txt
+    ----img_name confidence poly
+    ----img_name confidence poly
+...
+
+    """
     resfile_list = os.listdir(res_path)
     for file in resfile_list:
         file_id = file.split('.')[0]
@@ -25,7 +28,7 @@ def formatRes(res_path):
                 line = line.strip('\n')
                 info = line.split(' ')
                 txt_name = info[0] + '.txt'
-                txt = open(OUT_PATH + txt_name, 'a')
+                txt = open(out_dir + txt_name, 'a')
                 print('writing')
                 txt.write(file_id + ' ')
                 txt.write(info[1] + ' ')
@@ -35,4 +38,7 @@ def formatRes(res_path):
 
 
 if __name__ == '__main__':
-    formatRes(r'C:\Users\lyin0\OneDrive\桌面\res/')
+    out_path1 = r''
+    out_path2 = r''
+    formatRes(r'C:\Users\lyin0\OneDrive\桌面\res/', out_path1)
+    mergebypoly(out_path1, out_path2)
