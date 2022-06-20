@@ -147,7 +147,3 @@ def mergebypoly(srcpath, dstpath):
     """
     mergebase(srcpath, dstpath, py_cpu_nms_poly)
 
-
-if __name__ == '__main__':
-    mergebypoly(r'C:\Users\lyin0\OneDrive\桌面\format_res',
-                r'C:\Users\lyin0\OneDrive\桌面\final')
