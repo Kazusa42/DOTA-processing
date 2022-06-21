@@ -1,21 +1,21 @@
 import os
 from PIL import Image
 
-"""
-Script for converting DOTA annotation to VOC annotation
-DOTA annotation format:
-x1, y1, x2, y2, x4, y4, x3, y3, class_name, difficulty, (vertices are arranged in a clockwise order)
-(x1, y1)-----------(x2, y2)
-    |                  |
-    |                  |
-    |                  |
-    |                  |
-    |                  |
-(x3, y3)-----------(x4, y4)
-"""
-
 
 def txt2xml(data_dir):
+    """
+    Script for converting DOTA annotation to VOC annotation
+    DOTA annotation format:
+    x1, y1, x2, y2, x4, y4, x3, y3, class_name, difficulty, (vertices are arranged in a clockwise order)
+    (x1, y1)-----------(x2, y2)
+        |                  |
+        |                  |
+        |                  |
+        |                  |
+        |                  |
+    (x3, y3)-----------(x4, y4)
+    """
+
     annotations_dir = data_dir + r'labelTxt2/'
     img_dir = data_dir + r'images/'
     xml_dir = data_dir + r'XML/'
@@ -82,4 +82,16 @@ def delEmptyFile(data_dir):
             os.remove(txt_dir + file)
             os.remove(img_dir + img_name)
     print('Delete %d empty file in dir: %s' % (cnt, data_dir))
+
+
+def layoutTestTxt(test_dir):
+    """
+    test_dir: DOTA_VAL_CROP
+    """
+    img_dir = test_dir + r'images/'
+    img_list = os.listdir(img_dir)
+    with open('test.txt', 'w') as f:
+        for img_id in img_list:
+            f.write(img_id.split('.')[0] + '\n')
+    f.close()
 
