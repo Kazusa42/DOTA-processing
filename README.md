@@ -17,15 +17,16 @@ Pre-processing including crop images and labels, delete empty txt lable file and
 
 For original train set. I use 2 set parameters to crop:
 ```
-subsize = 640, gap = 50 and subsize = 1280, gap = 100.
+subsize = 640, gap = 50 and subsize = 1280, gap = 100
 ```
 This cropped original train set serves as train and val set in _CROPPED_DOTA_ dataset.
+
 
 For original validation set. I use 1 set paramater to crop:
 ```
 subsize = 1024, gap = 50
 ```
-This cropped original val set serves as test set in _CROPPED_DATA dataset.
+This cropped original val set serves as test set in _CROPPED_DATA_ dataset.
 
 All these process are in `pre_processing.py`. Usages are shown blow.
 
