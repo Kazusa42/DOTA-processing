@@ -9,6 +9,7 @@ Then add the unzipped folder into system variable. And use the code blow to crea
 python setup.py build_ext --inplace
 ```
 
+However, `merge.py` has been removed.
 ---
 
 # Pre-processing  
@@ -34,29 +35,3 @@ delEmptyFile(dataset_dir)
 ```
 txt2xml(dataset_dir)
 ```  
-
----
-
-# Post-processing  
-Post-processing including transform detection results into required formats and merage results.
-
-All process are in `post_processing.py`. Usages are shown blow.
-
-### Transform detection results format  
-The original detection result by yolo is like this:  
-```
-image_id.txt: class_name, confidence, xmin, ymin, xmax, ymax
-```  
-The required format is like this:  
-```
-class_name.txt: img_id, configdence, 8 poly coords.
-```  
-This function is realised in `formatRes`.
-
-### Merge
-```
-mergebypoly(unmerged_label_path, output_path)
-```
-
-
- 
