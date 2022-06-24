@@ -51,7 +51,7 @@ The required format is like this:
 ```
 class_name.txt: img_id, configdence, 8 poly coords.
 ```  
-This function is relaised in `formatRes`.
+This function is realised in `formatRes`.
 
 ### Merge
 ```
