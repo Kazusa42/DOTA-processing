@@ -5,7 +5,7 @@ To use the code, especially `merge.py`, please install `swig`. For Windows syste
 
 Then add the unzipped folder into system variable. And use the code blow to create the `c++` associations used in `polyiou.py`.
 ```
-./swig -c++ -python
+./swig -c++ -python path_for_file_polyiou.i
 python setup.py build_ext --inplace
 ```
 
