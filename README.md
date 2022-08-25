@@ -77,7 +77,7 @@ mergedRes2ImageRes(merged_results, final_results)
 # BUG
 After `post-processing`, there might be some missed txt files because the model can not detect anything from those images.
 
-Currently, this bug is fixed by creat those txt manually.
+Currently, this bug is fixed by creating those txt files manually.
 
 
  
