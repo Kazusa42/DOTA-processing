@@ -126,16 +126,25 @@ def mergedRes2ImageRes(merged_path, detection_path):
                 f.write(cat + ' ' + conf + ' ')
                 f.write(xmin + ' ' + ymin + ' ' + xmax + ' ' + ymax + '\n')
 
+    # creat empty txt for pictures of objects not detected, in case error accurs while running get_map.py
+    gt_imgs = list(open(r'./test.txt', 'r'))
+    detection_imgs = os.listdir(detection_path)
+    for gt in gt_imgs:
+        if gt not in detection_imgs:
+            open(os.path.join(detection_path, gt + '.txt'), 'w')
+
 
 if __name__ == "__main__":
     detections = r'C:\Users\Kazusa\Desktop\Project1-main\map_out\detection-results'
     out_path = r'C:\Users\Kazusa\Desktop\out_path1'
+    merge_path = r'C:\Users\Kazusa\Desktop\merged_results'
+    final_path = r'C:\Users\Kazusa\Desktop\final_path'
+
     # first classify detection results by category
     crateClassifyRes(detections, out_path)
 
     # merge sub-images results into full image results
-    mergebypoly(out_path, r'C:\Users\Kazusa\Desktop\merged_results')
+    mergebypoly(out_path, merge_path)
 
     # transform merged resuls into the required format
-    mergedRes2ImageRes(r'C:\Users\Kazusa\Desktop\merged_results',
-                       r'C:\Users\Kazusa\Desktop\Project1-main\map_out\detection-results')
+    mergedRes2ImageRes(merge_path, final_path)
