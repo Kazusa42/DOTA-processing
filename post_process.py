@@ -4,6 +4,10 @@ from PIL import Image
 import dota_utils as utils
 from merge import mergebypoly
 
+CLASSES = ['plane', 'ship', 'storage-tank', 'baseball-diamond', 'tennis-court',
+           'basketball-court', 'ground-track-field', 'harbor', 'bridge', 'large-vehicle',
+           'small-vehicle', 'helicopter', 'roundabout', 'soccer-ball-field', 'swimming-pool'],
+
 
 def txt2xml(data_dir):
     """
@@ -99,52 +103,83 @@ def layoutTestTxt(test_dir):
     f.close()
 
 
-def crateClassifyRes(result_dir, classify_res_dir):
-    result_files = os.listdir(result_dir)
+def crateClassifyRes(in_dir, out_dir, classes=CLASSES):
+    """
+    Classify row detection results (results from sub-images) into Catalogs (plane.txt, ship.txt, ...)
+    params:
+    in_dir: path for row detection results
+    out_dir: path to store classified results
+    """
+    file_dict = {}
+    for cls in classes[0]:
+        cls_file = open(os.path.join(out_dir, cls + '.txt'), 'w')
+        file_dict[str(cls)] = cls_file
+
+    result_files = os.listdir(in_dir)
     for file in result_files:
         img_id = file.split('\\')[-1][:-4]
-        for line in open(os.path.join(result_dir, file)):
+        for line in open(os.path.join(in_dir, file)):
             line = line.strip('\n').split(' ')
-            # print(line)
             cat, conf = line[0], line[1]
             xmin, ymin, xmax, ymax = line[2], line[3], line[4], line[5]
-            with open(os.path.join(classify_res_dir, cat + '.txt'), 'a+') as f:
-                f.write(img_id + ' ' + conf + ' ')
-                f.write(xmin + ' ' + ymin + ' ' + xmax + ' ' + ymin + ' ')
-                f.write(xmax + ' ' + ymax + ' ' + xmin + ' ' + ymax + '\n')
+            file_dict[cat].write(img_id + ' ' + conf + ' ')
+            file_dict[cat].write(xmin + ' ' + ymin + ' ' + xmax + ' ' + ymin + ' ')
+            file_dict[cat].write(xmax + ' ' + ymax + ' ' + xmin + ' ' + ymax + '\n')
+
+    for val in file_dict.values():
+        val.close()
 
 
-def mergedRes2ImageRes(merged_path, detection_path):
-    merged_files = os.listdir(merged_path)
+def mergedRes2ImageRes(in_dir, out_dir):
+    """
+    Use classified results to create results for each full image
+    params:
+    in_dir: path for classified results, the out_dir in function "crateClassifyRes"
+    out_dir: path to store the final results for each full image in test set
+    """
+    file_dict = {}
+    for cls in list(open(r'./test_full_img_name.txt', 'r')):
+        cls_file = open(os.path.join(out_dir, cls.strip('\n') + '.txt'), 'w')
+        file_dict[str(cls.strip('\n'))] = cls_file
+
+    merged_files = os.listdir(in_dir)
     for file in merged_files:
+        print(file)
         cat = file.split('\\')[-1][:-4]
-        for line in open(os.path.join(merged_path, file)):
+        for line in open(os.path.join(in_dir, file)):
             line = line.strip('\n').split(' ')
-            img_id, conf = line[0], line[1]
+            img_id, conf = line[0][:5], line[1]
             xmin, ymin, xmax, ymax = line[2], line[3], line[6], line[7]
-            with open(os.path.join(detection_path, img_id + '.txt'), 'a+') as f:
-                f.write(cat + ' ' + conf + ' ')
-                f.write(xmin + ' ' + ymin + ' ' + xmax + ' ' + ymax + '\n')
+            file_dict[img_id].write(cat + ' ' + conf + ' ')
+            file_dict[img_id].write(xmin + ' ' + ymin + ' ' + xmax + ' ' + ymax + '\n')
+
+    for val in file_dict.values():
+        val.close()
 
     # creat empty txt for pictures of objects not detected, in case error accurs while running get_map.py
-    gt_imgs = list(open(r'./test.txt', 'r'))
-    detection_imgs = os.listdir(detection_path)
+    gt_imgs = list(open(r'./test_full_img_name.txt', 'r'))
+    detection_imgs = os.listdir(out_dir)
     for gt in gt_imgs:
-        if gt not in detection_imgs:
-            open(os.path.join(detection_path, gt + '.txt'), 'w')
+        name = gt.strip('\n') + '.txt'
+        if name not in detection_imgs:
+            open(os.path.join(final_path, gt.strip('\n') + '.txt'), 'w')
 
 
 if __name__ == "__main__":
-    detections = r'C:\Users\Kazusa\Desktop\Project1-main\map_out\detection-results'
+    detections = r'C:\Users\Kazusa\Desktop\yolox-pytorch-main\map_out\detection-results'
     out_path = r'C:\Users\Kazusa\Desktop\out_path1'
     merge_path = r'C:\Users\Kazusa\Desktop\merged_results'
-    final_path = r'C:\Users\Kazusa\Desktop\final_path'
+    final_path = r'C:\Users\Kazusa\Desktop\final_result'
 
     # first classify detection results by category
-    crateClassifyRes(detections, out_path)
+    # crateClassifyRes(detections, out_path)
 
     # merge sub-images results into full image results
-    mergebypoly(out_path, merge_path)
+    # mergebypoly(out_path, merge_path)
 
     # transform merged resuls into the required format
     mergedRes2ImageRes(merge_path, final_path)
+
+
+
+
