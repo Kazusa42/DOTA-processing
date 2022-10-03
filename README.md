@@ -44,6 +44,8 @@ Post-processing including transform detection results into required formats and 
 
 All process are in the `main` function of `utils4file.py`. Usages are shown blow.
 
+This script has been rewrotten, in order to speed up file read/write process.
+
 
 ### Transform detection results format  
 The original detection result by yolo is like this:  
@@ -71,13 +73,6 @@ The function will transform the mergerd results into the results classified by i
 ```
 mergedRes2ImageRes(merged_results, final_results)
 ```
-
----
-
-# BUG
-After `post-processing`, there might be some missed txt files because the model can not detect anything from those images.
-
-Currently, this bug is fixed by creating those txt files manually.
 
 
  
