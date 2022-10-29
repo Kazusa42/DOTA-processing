@@ -1,6 +1,8 @@
 import os
 from PIL import Image
 
+Image.MAX_IMAGE_PIXELS = 1000000000
+
 CLASSES = ['plane', 'ship', 'storage-tank', 'baseball-diamond', 'tennis-court',
            'basketball-court', 'ground-track-field', 'harbor', 'bridge', 'large-vehicle',
            'small-vehicle', 'helicopter', 'roundabout', 'soccer-ball-field', 'swimming-pool']

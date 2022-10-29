@@ -52,7 +52,7 @@ class splitbase:
                  subsize=1024,
                  thresh=0.7,
                  choosebestpoint=True,
-                 ext='.png',
+                 ext='.jpg',
                  padding=True,
                  num_process=8
                  ):

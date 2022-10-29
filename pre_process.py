@@ -1,16 +1,14 @@
 from crop import splitbase
 from post_process import txt2xml, delEmptyFile, layoutTestTxt
 
-BASE_DATA = [r'C:/Users/Kazusa/Desktop/DOTA/TRAIN/',
-             r'C:/Users/Kazusa/Desktop/DOTA/VAL/',
-             r'C:/Users/Kazusa/Desktop/DOTA/TEST/']
+BASE_DATA = [r'C:/Users/lyin0/Desktop/DOTA/TRAIN/',
+             r'C:/Users/lyin0/Desktop/DOTA/VAL/']
 
-MULTICROP_DATA = [r'C:/Users/Kazusa/Desktop/DOTA_TRAIN_MULTICROP/',
-                  r'C:/Users/Kazusa/Desktop/DOTA_VAL_MULTICROP/']
+MULTICROP_DATA = [r'C:/Users/lyin0/Desktop/TRAIN_MULTI/',
+                  r'C:/Users/lyin0/Desktop/VAL_MULTI/']
 
-SINGLECROP_DATA = [r'C:/Users/Kazusa/Desktop/DOTA/TRAIN_SINGLE/',
-                   r'C:/Users/Kazusa/Desktop/DOTA/VAL_SINGLE/',
-                   r'C:/Users/Kazusa/Desktop/DOTA/TEST_SINGLE/']
+SINGLECROP_DATA = [r'C:/Users/lyin0/Desktop/DOTA/TRAIN_SINGLE/',
+                   r'C:/Users/lyin0/Desktop/DOTA/VAL_SINGLE/']
 
 
 MULTICROP_PARA = [(480, 100), (1280, 256)]
