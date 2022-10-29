@@ -1,3 +1,7 @@
+"""
+-------------
+This is the multi-process version
+"""
 import os
 import codecs
 import numpy as np
@@ -7,6 +11,8 @@ import cv2
 import shapely.geometry as shgeo
 import dota_utils as util
 import copy
+from multiprocessing import Pool
+from functools import partial
 
 
 def choose_best_pointorder_fit_another(poly1, poly2):
@@ -25,12 +31,16 @@ def choose_best_pointorder_fit_another(poly1, poly2):
                  np.array([x3, y3, x4, y4, x1, y1, x2, y2]), np.array([x4, y4, x1, y1, x2, y2, x3, y3])]
     dst_coordinate = np.array(poly2)
     distances = np.array([np.sum((coord - dst_coordinate) ** 2) for coord in combinate])
-    sorted = distances.argsort()
-    return combinate[sorted[0]]
+    sorted_dis = distances.argsort()
+    return combinate[sorted_dis[0]]
 
 
 def cal_line_length(point1, point2):
     return math.sqrt(math.pow(point1[0] - point2[0], 2) + math.pow(point1[1] - point2[1], 2))
+
+
+def split_single_warp(name, split_base, rate, extent):
+    split_base.SplitSingle(name, rate, extent)
 
 
 class splitbase:
@@ -38,11 +48,13 @@ class splitbase:
                  basepath,
                  outpath,
                  code='utf-8',
-                 gap=100,
+                 gap=512,
                  subsize=1024,
                  thresh=0.7,
                  choosebestpoint=True,
-                 ext='.jpg'
+                 ext='.png',
+                 padding=True,
+                 num_process=8
                  ):
         """
         :param basepath: base path for dota data
@@ -51,9 +63,11 @@ class splitbase:
         :param code: encodeing format of txt file
         :param gap: overlap between two patches
         :param subsize: subsize of patch
-        :param thresh: the thresh determine whether to keep the instance if the instance is cut down in the process of split
+        :param thresh: the thresh determine whether to keep the instance if the instance
+                       is cut down in the process of split
         :param choosebestpoint: used to choose the first point for the
         :param ext: ext for the image format
+        :param padding: if to padding the images so that all the images have the same size
         """
         self.basepath = basepath
         self.outpath = outpath
@@ -68,15 +82,19 @@ class splitbase:
         self.outlabelpath = os.path.join(self.outpath, 'labelTxt')
         self.choosebestpoint = choosebestpoint
         self.ext = ext
-        if not os.path.exists(self.outimagepath):
-            os.makedirs(self.outimagepath)
-        if not os.path.exists(self.outlabelpath):
-            os.makedirs(self.outlabelpath)
+        self.padding = padding
+        self.num_process = num_process
+        self.pool = Pool(num_process)
+        print('padding:', padding)
 
-    # point: (x, y), rec: (xmin, ymin, xmax, ymax)
-    # def __del__(self):
-    #     self.f_sub.close()
-    # grid --> (x, y) position of grids
+        if not os.path.isdir(self.outpath):
+            os.mkdir(self.outpath)
+        if not os.path.isdir(self.outimagepath):
+            # pdb.set_trace()
+            os.mkdir(self.outimagepath)
+        if not os.path.isdir(self.outlabelpath):
+            os.mkdir(self.outlabelpath)
+
     def polyorig2sub(self, left, up, poly):
         polyInsub = np.zeros(len(poly))
         for i in range(int(len(poly) / 2)):
@@ -97,7 +115,13 @@ class splitbase:
     def saveimagepatches(self, img, subimgname, left, up):
         subimg = copy.deepcopy(img[up: (up + self.subsize), left: (left + self.subsize)])
         outdir = os.path.join(self.outimagepath, subimgname + self.ext)
-        cv2.imwrite(outdir, subimg)
+        h, w, c = np.shape(subimg)
+        if self.padding:
+            outimg = np.zeros((self.subsize, self.subsize, 3))
+            outimg[0:h, 0:w, :] = subimg
+            cv2.imwrite(outdir, outimg)
+        else:
+            cv2.imwrite(outdir, subimg)
 
     def GetPoly4FromPoly5(self, poly):
         distances = [cal_line_length((poly[i * 2], poly[i * 2 + 1]), (poly[(i + 1) * 2], poly[(i + 1) * 2 + 1])) for i
@@ -107,7 +131,6 @@ class splitbase:
         count = 0
         outpoly = []
         while count < 5:
-            # print('count:', count)
             if count == pos:
                 outpoly.append((poly[count * 2] + poly[(count * 2 + 2) % 10]) / 2)
                 outpoly.append((poly[(count * 2 + 1) % 10] + poly[(count * 2 + 3) % 10]) / 2)
@@ -124,7 +147,6 @@ class splitbase:
 
     def savepatches(self, resizeimg, objects, subimgname, left, up, right, down):
         outdir = os.path.join(self.outlabelpath, subimgname + '.txt')
-        mask_poly = []
         imgpoly = shgeo.Polygon([(left, up), (right, up), (right, down),
                                  (left, down)])
         with codecs.open(outdir, 'w', self.code) as f_out:
@@ -137,15 +159,12 @@ class splitbase:
                     continue
                 inter_poly, half_iou = self.calchalf_iou(gtpoly, imgpoly)
 
-                # print('writing...')
                 if half_iou == 1:
                     polyInsub = self.polyorig2sub(left, up, obj['poly'])
                     outline = ' '.join(list(map(str, polyInsub)))
                     outline = outline + ' ' + obj['name'] + ' ' + str(obj['difficult'])
                     f_out.write(outline + '\n')
                 elif half_iou > 0:
-                    # elif (half_iou > self.thresh):
-                    #  print('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
                     inter_poly = shgeo.polygon.orient(inter_poly, sign=1)
                     out_poly = list(inter_poly.exterior.coords)[0: -1]
                     if len(out_poly) < 4:
@@ -157,7 +176,6 @@ class splitbase:
                         out_poly2.append(out_poly[i][1])
 
                     if len(out_poly) == 5:
-                        # print('==========================')
                         out_poly2 = self.GetPoly4FromPoly5(out_poly2)
                     elif len(out_poly) > 5:
                         """
@@ -178,11 +196,8 @@ class splitbase:
                     if half_iou > self.thresh:
                         outline = outline + ' ' + obj['name'] + ' ' + str(obj['difficult'])
                     else:
-                        # if the left part is too small, label as '2'
                         outline = outline + ' ' + obj['name'] + ' ' + '2'
                     f_out.write(outline + '\n')
-                # else:
-                #   mask_poly.append(inter_poly)
         self.saveimagepatches(resizeimg, subimgname, left, up)
 
     def SplitSingle(self, name, rate, extent):
@@ -200,7 +215,6 @@ class splitbase:
         objects = util.parse_dota_poly2(fullname)
         for obj in objects:
             obj['poly'] = list(map(lambda x: rate * x, obj['poly']))
-            # obj['poly'] = list(map(lambda x: ([2 * y for y in x]), obj['poly']))
 
         if rate != 1:
             resizeimg = cv2.resize(img, None, fx=rate, fy=rate, interpolation=cv2.INTER_CUBIC)
@@ -221,7 +235,6 @@ class splitbase:
                 right = min(left + self.subsize, weight - 1)
                 down = min(up + self.subsize, height - 1)
                 subimgname = outbasename + str(left) + '___' + str(up)
-                # self.f_sub.write(name + ' ' + subimgname + ' ' + str(left) + ' ' + str(up) + '\n')
                 self.savepatches(resizeimg, objects, subimgname, left, up, right, down)
                 if up + self.subsize >= height:
                     break
@@ -238,12 +251,27 @@ class splitbase:
         """
         imagelist = GetFileFromThisRootDir(self.imagepath)
         imagenames = [util.custombasename(x) for x in imagelist if (util.custombasename(x) != 'Thumbs')]
-        for name in imagenames:
-            self.SplitSingle(name, rate, self.ext)
+        if self.num_process == 1:
+            for name in imagenames:
+                self.SplitSingle(name, rate, self.ext)
+        else:
+            worker = partial(split_single_warp, split_base=self, rate=rate, extent=self.ext)
+            self.pool.map(worker, imagenames)
+
+    def __getstate__(self):
+        self_dict = self.__dict__.copy()
+        del self_dict['pool']
+        return self_dict
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
 
 
 if __name__ == '__main__':
-    # example usage of ImgSplit
-    split = splitbase(r'example',
-                      r'examplesplit')
+    split = splitbase(r'/home/dingjian/data/dota/val',
+                      r'/home/dingjian/data/dota/valsplit',
+                      gap=200,
+                      subsize=1024,
+                      num_process=8
+                      )
     split.splitdata(1)

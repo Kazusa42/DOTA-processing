@@ -1,12 +1,9 @@
 import os
 from PIL import Image
 
-import dota_utils as utils
-from merge import mergebypoly
-
 CLASSES = ['plane', 'ship', 'storage-tank', 'baseball-diamond', 'tennis-court',
            'basketball-court', 'ground-track-field', 'harbor', 'bridge', 'large-vehicle',
-           'small-vehicle', 'helicopter', 'roundabout', 'soccer-ball-field', 'swimming-pool'],
+           'small-vehicle', 'helicopter', 'roundabout', 'soccer-ball-field', 'swimming-pool']
 
 
 def txt2xml(data_dir):
@@ -34,12 +31,12 @@ def txt2xml(data_dir):
         with open(xml_name, 'w') as fout:
             fout.write('<annotation>' + '\n')
 
-            fout.write('\t' + '<folder>DOTA 1.0</folder>' + '\n')
+            fout.write('\t' + '<folder>DOTA</folder>' + '\n')
             fout.write('\t' + '<filename>' + image_name + '.jpg' + '</filename>' + '\n')
 
             fout.write('\t' + '<source>' + '\n')
-            fout.write('\t\t' + '<database>' + 'DOTA 1.0' + '</database>' + '\n')
-            fout.write('\t\t' + '<annotation>' + 'DOTA 1.0' + '</annotation>' + '\n')
+            fout.write('\t\t' + '<database>' + 'DOTA' + '</database>' + '\n')
+            fout.write('\t\t' + '<annotation>' + 'DOTA' + '</annotation>' + '\n')
             fout.write('\t\t' + '<image>' + 'flickr' + '</image>' + '\n')
             fout.write('\t\t' + '<flickrid>' + 'Unspecified' + '</flickrid>' + '\n')
             fout.write('\t' + '</source>' + '\n')
@@ -59,18 +56,21 @@ def txt2xml(data_dir):
 
             for line in fin.readlines():
                 line = line.split(' ')
-                fout.write('\t' + '<object>' + '\n')
-                fout.write('\t\t' + '<name>' + str(line[8]) + '</name>' + '\n')
-                fout.write('\t\t' + '<pose>' + 'Unspecified' + '</pose>' + '\n')
-                fout.write('\t\t' + '<truncated>' + line[6] + '</truncated>' + '\n')
-                fout.write('\t\t' + '<difficult>' + str(int(line[9])) + '</difficult>' + '\n')
-                fout.write('\t\t' + '<bndbox>' + '\n')
-                fout.write('\t\t\t' + '<xmin>' + line[0] + '</xmin>' + '\n')
-                fout.write('\t\t\t' + '<ymin>' + line[1] + '</ymin>' + '\n')
-                fout.write('\t\t\t' + '<xmax>' + line[4] + '</xmax>' + '\n')
-                fout.write('\t\t\t' + '<ymax>' + line[5] + '</ymax>' + '\n')
-                fout.write('\t\t' + '</bndbox>' + '\n')
-                fout.write('\t' + '</object>' + '\n')
+                label = str(line[8])
+                # only transfer classes for DOTA v1.0
+                if label in CLASSES:
+                    fout.write('\t' + '<object>' + '\n')
+                    fout.write('\t\t' + '<name>' + str(line[8]) + '</name>' + '\n')
+                    fout.write('\t\t' + '<pose>' + 'Unspecified' + '</pose>' + '\n')
+                    fout.write('\t\t' + '<truncated>' + line[6] + '</truncated>' + '\n')
+                    fout.write('\t\t' + '<difficult>' + str(int(line[9])) + '</difficult>' + '\n')
+                    fout.write('\t\t' + '<bndbox>' + '\n')
+                    fout.write('\t\t\t' + '<xmin>' + line[0] + '</xmin>' + '\n')
+                    fout.write('\t\t\t' + '<ymin>' + line[1] + '</ymin>' + '\n')
+                    fout.write('\t\t\t' + '<xmax>' + line[4] + '</xmax>' + '\n')
+                    fout.write('\t\t\t' + '<ymax>' + line[5] + '</ymax>' + '\n')
+                    fout.write('\t\t' + '</bndbox>' + '\n')
+                    fout.write('\t' + '</object>' + '\n')
 
             fin.close()
             fout.write('</annotation>')
@@ -103,15 +103,17 @@ def layoutTestTxt(test_dir):
     f.close()
 
 
-def crateClassifyRes(in_dir, out_dir, classes=CLASSES):
+def crateClassifyRes(in_dir, out_dir, classes=None):
     """
     Classify row detection results (results from sub-images) into Catalogs (plane.txt, ship.txt, ...)
     params:
     in_dir: path for row detection results
     out_dir: path to store classified results
     """
+    if classes is None:
+        classes = CLASSES
     file_dict = {}
-    for cls in classes[0]:
+    for cls in classes:
         cls_file = open(os.path.join(out_dir, cls + '.txt'), 'w')
         file_dict[str(cls)] = cls_file
 
@@ -179,7 +181,3 @@ if __name__ == "__main__":
 
     # transform merged resuls into the required format
     mergedRes2ImageRes(merge_path, final_path)
-
-
-
-
