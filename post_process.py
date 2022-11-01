@@ -1,6 +1,8 @@
 import os
 from PIL import Image
 
+from merge import mergebypoly
+
 Image.MAX_IMAGE_PIXELS = 1000000000
 
 CLASSES = ['plane', 'ship', 'storage-tank', 'baseball-diamond', 'tennis-court',
@@ -142,7 +144,7 @@ def mergedRes2ImageRes(in_dir, out_dir):
     out_dir: path to store the final results for each full image in test set
     """
     file_dict = {}
-    for cls in list(open(r'./test_full_img_name.txt', 'r')):
+    for cls in list(open(r'./test_full_img.txt', 'r')):
         cls_file = open(os.path.join(out_dir, cls.strip('\n') + '.txt'), 'w')
         file_dict[str(cls.strip('\n'))] = cls_file
 
@@ -152,7 +154,8 @@ def mergedRes2ImageRes(in_dir, out_dir):
         cat = file.split('\\')[-1][:-4]
         for line in open(os.path.join(in_dir, file)):
             line = line.strip('\n').split(' ')
-            img_id, conf = line[0][:5], line[1]
+            # print(line)
+            img_id, conf = line[0], line[1]
             xmin, ymin, xmax, ymax = line[2], line[3], line[6], line[7]
             file_dict[img_id].write(cat + ' ' + conf + ' ')
             file_dict[img_id].write(xmin + ' ' + ymin + ' ' + xmax + ' ' + ymax + '\n')
@@ -161,7 +164,7 @@ def mergedRes2ImageRes(in_dir, out_dir):
         val.close()
 
     # creat empty txt for pictures of objects not detected, in case error accurs while running get_map.py
-    gt_imgs = list(open(r'./test_full_img_name.txt', 'r'))
+    gt_imgs = list(open(r'./test_full_img.txt', 'r'))
     detection_imgs = os.listdir(out_dir)
     for gt in gt_imgs:
         name = gt.strip('\n') + '.txt'
