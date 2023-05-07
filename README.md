@@ -12,6 +12,9 @@ python setup.py build_ext --inplace
 
 ---
 
+# Update on 2023/05/07  
+Integrate some functions.
+
 # Pre-processing  
 Pre-processing including crop images and labels, delete empty txt lable file and corresponding images, transform txt label file into xml format.  
 
